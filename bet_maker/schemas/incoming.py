@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field, PositiveInt
 class Login(BaseModel):
     username: str
     password: str
-    user_id: int
 
 
 class Bet(BaseModel):

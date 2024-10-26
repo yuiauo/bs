@@ -11,6 +11,7 @@ class OutgoingModel(BaseModel):
 class Login(OutgoingModel):
     username: str
     password: str
+    user_id: int
 
 class User(OutgoingModel):
     id: PositiveInt
@@ -24,3 +25,5 @@ class Bet(OutgoingModel):
     event_id: PositiveInt
     user_id: PositiveInt
 
+class UserBets(OutgoingModel):
+    bets: list[Bet]

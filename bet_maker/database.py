@@ -8,4 +8,4 @@ url = os.getenv("PG_DATABASE_URL")
 
 
 bind = create_async_engine(url=url, future=True, echo=True)
-AsyncSession = async_sessionmaker(bind=bind, expire_on_commit=False)
+AsyncSessionLocal = async_sessionmaker(bind=bind, expire_on_commit=False)
