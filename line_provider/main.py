@@ -1,44 +1,61 @@
-from contextlib import asynccontextmanager
-import time
+# from typing import cast
 
-from fastapi import Depends, FastAPI, Path, HTTPException
+from aio_pika.abc import AbstractChannel
+from fastapi import Depends, FastAPI, HTTPException, status
+from starlette.responses import RedirectResponse
 
-from database import EventStorage, storage
-from schemas import Event
-from services import get_channel, send_event
+# from line_provider.lp_typing import EventState
+from schemas import EventCreated
+from lp_typing import EventType
+from schemas import Event, EventList
+from services import EventStorage, get_channel, get_db, send_events
+from settings import APISettings
 
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     connection = await anext(get_db())
-#     channel = await connection.channel()
-#     await channel.declare_queue(EVENT_QUEUE, durable=True)
-#     yield
-#     await channel.close()
-#     await connection.close()
+app = FastAPI(**APISettings().model_dump())
 
 
-app = FastAPI()
 
-
-@app.post('/event', status_code=201)
+@app.post("/event", status_code=status.HTTP_201_CREATED, tags=["Event"])
 async def create_event(
-        event: Event, db: EventStorage = Depends(storage)
-) -> int:
+        event: Event,
+        channel: AbstractChannel = Depends(get_channel),
+        db: EventStorage = Depends(get_db)
+) -> EventCreated:
     if event in db:
-        raise HTTPException(status_code=409, detail='Event already exists')
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Event already exists"
+        )
     await db.add(event)
-    return event
+    await send_events(channel, db)
+    return EventCreated(event_id=event.id)
 
 
-# @app.get('/event/{event_id}')
-# async def get_event(event_id: int = Path(default=None)):
-#     if event_id in events:
-#         return events[event_id]
-#
-#     raise HTTPException(status_code=404, detail="Event not found")
+@app.get("/event/{event_id}", tags=["Event"])
+async def get_event(
+        event_id: int, db: EventStorage = Depends(get_db)
+) -> Event:
+    if event := await db.get(event_id):
+        return event
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Event not found"
+    )
 
 
-# @app.get('/events')
-# async def get_events():
-#     return list(e for e in events.values() if time.time() < e.deadline)
+@app.get("/events/{event_type}", response_model=None, tags=["Event"])
+async def get_events(
+        event_type: EventType,
+        db: EventStorage = Depends(get_db)
+) -> EventList | RedirectResponse:
+    if event_type == "all":
+        return RedirectResponse(url='/events')
+    # cast(EventState, event_type)
+    return db[event_type]
+
+
+@app.get("/events", tags=["Event"])
+async def get_events(db: EventStorage = Depends(get_db)) -> EventList:
+    return db.all
+
+
+

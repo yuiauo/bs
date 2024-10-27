@@ -1,21 +1,27 @@
 from decimal import Decimal
 import json
-from typing import Literal
 
 from pydantic import BaseModel, Field, PositiveInt
 
-
-EventState = Literal["open", "win1", "win2"]
+from lp_typing import EventState
 
 
 class Event(BaseModel):
     """ Модель события """
     id: PositiveInt
-    coefficient: Decimal = Field(gt=0)
+    coefficient: Decimal = Field(gt=1)
     state: EventState
-    deadline: PositiveInt
+    deadline: PositiveInt = Field(ge=15e8, le=20e8)
     description: str | None = None
 
     def to_bytes(self) -> bytes:
         python_dict = self.model_dump()
         return json.dumps(python_dict).encode()
+
+
+class EventCreated(BaseModel):
+    event_id: PositiveInt = Field(ge=1)
+
+
+class EventList(BaseModel):
+    events: list[Event]
