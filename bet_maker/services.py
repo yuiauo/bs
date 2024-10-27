@@ -32,7 +32,7 @@ async def get_user_by_id(user_id: int, db: AsyncSession) -> User | None:
 
 async def create_user(username: str, db: AsyncSession) -> User | None:
     if await get_user_in_db(username, db) is None:
-        user = User(name=username)
+        user = User(name=username, balance=Decimal(100))
         db.add(user)
         await db.commit()
         await db.refresh(user)

@@ -1,24 +1,8 @@
 from functools import lru_cache
-from typing import Any
-
 from pydantic_settings import BaseSettings
 
 
-class EnvSettings(BaseSettings):
-    class Config:
-        env_file = ".env"
-        extra = "allow"
-
-
-class PostgresSettings(EnvSettings):
-    PG_PORT: int
-    PG_HOST: str
-    PG_DATABASE: str
-    PG_USERNAME: str
-    PG_PASSWORD: str
-
-
-class APISettings(EnvSettings):
+class APISettings(BaseSettings):
     title: str = "bs API"
     description: str = "Test task api"
     version: str = "1.0"
@@ -30,19 +14,15 @@ class APISettings(EnvSettings):
     ]
 
 
-class ExtraSettings(EnvSettings):
+class ExtraSettings(BaseSettings, extra="allow", env_file=".env"):
     PEPPER: str
 
 
-@lru_cache(maxsize=1)
-class Settings(BaseSettings):
-    app: dict[str, Any]
-    pg: PostgresSettings
-    extra: ExtraSettings
+@lru_cache
+class AppSettings:
+    def __init__(self):
+        self.api = APISettings().model_dump()
+        self.extra: ExtraSettings()
 
 
-settings = Settings(
-    app=APISettings().model_dump(),
-    pg=PostgresSettings(),
-    extra=ExtraSettings(),
-)
+settings = AppSettings()

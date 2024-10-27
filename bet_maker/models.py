@@ -15,7 +15,6 @@ class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(unique=True)
-    # password: Mapped[str]
     balance: Mapped[Decimal] = mapped_column(Numeric(scale=2), default=0)
     bets: Mapped[list[Bet]] = relationship(cascade="all, delete")
 
