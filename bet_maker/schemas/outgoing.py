@@ -23,7 +23,7 @@ class User(OutgoingModel):
 class Bet(OutgoingModel):
     """Bet model to be returned """
     id: PositiveInt | None = None
-    bid: Annotated[Decimal, PlainSerializer(lambda x: float(x), return_type=float, when_used='json')]  = Field(gt=0, lt=1e4)
+    bid: Decimal = Field(gt=0, lt=1e4)
     event_id: PositiveInt
     user_id: PositiveInt
 

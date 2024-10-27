@@ -21,10 +21,12 @@ async def get_events() -> list[ext.Event]:
     return []
 
 
+
 @app.get("/event", tags=["Event"])
 async def get_event_by_id() -> ext.Event:
     ...
     return ext.Event()
+
 
 
 @app.post("/bet", status_code=status.HTTP_201_CREATED, tags=["Bet"])
@@ -51,6 +53,7 @@ async def get_bets(db: AsyncSession = Depends(get_db)) -> out.UserBets:
         bets = await get_user_bets(user[0], db)
         return out.UserBets.model_validate(bets)
     raise HTTPException(status_code=401, detail="Unauthorized")
+
 
 @app.post("/user", status_code=status.HTTP_201_CREATED, tags=["User"])
 async def add_user(db: AsyncSession = Depends(get_db)) -> out.User:

@@ -17,6 +17,8 @@ services:
     build: ./bet-maker
     container_name: bet-maker
     command: "uvicorn app.main:app --host 0.0.0.0 --port 8081"
+    env_file:
+      - bet_maker/.env
     volumes:
       - ./bet-maker/:/code
     ports:
@@ -31,6 +33,8 @@ services:
   postgres:
     image: postgres:17-alpine
     restart: always
+    env_file:
+      - bet_maker/.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -44,8 +48,10 @@ services:
     image: rabbitmq:4.0.2-alpine
     hostname: rabbitmq
     restart: always
+    env_file:
+      - line_provider/.env
     environment:
-      - RABBITMQ_DEFAULT_USER=rabbitmq
+      - RABBITMQ_DEFAULT_USER=&{R}
       - RABBITMQ_DEFAULT_PASS=rabbitmq
     ports:
       - "15672:15672"
