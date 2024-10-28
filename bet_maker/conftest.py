@@ -1,11 +1,14 @@
+from decimal import Decimal
 import os
+import time
 
 import dotenv
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy import select
 
 from bet_maker.main import app as bapp
-from bet_maker.models import Base
+from bet_maker.models import Base, Event
 from bet_maker.services import get_db
 
 

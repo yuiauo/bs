@@ -1,25 +1,36 @@
-import time
+import asyncio
+from contextlib import asynccontextmanager
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, Path, status
+from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import PositiveInt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from schemas import incoming as inc, outgoing as out, external as ext
 from services import (
-    create_user, get_db, get_user_by_id, create_bet, get_user_bets
+    create_user, get_db, get_user_by_id, create_bet, get_user_bets,
+    wait_for_events, get_available_events
 )
 from settings import settings
 
 
-app = FastAPI(**settings.api)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    asyncio.create_task(wait_for_events())
+    yield
+
+
+app = FastAPI(**settings.api, lifespan=lifespan)
 
 
 @app.get("/events", tags=["Event"])
-async def get_events() -> list[ext.Event]:
-    ...
-    return []
-
+async def get_events(db: AsyncSession = Depends(get_db)) -> ext.NewEvents:
+    for e in await get_available_events(db):
+        print(e)
+    events = [
+        ext.Event.model_validate(e[0]) for e in await get_available_events(db)
+    ]
+    return ext.NewEvents(events=events)
 
 
 @app.get("/event", tags=["Event"])
@@ -28,17 +39,17 @@ async def get_event_by_id() -> ext.Event:
     return ext.Event()
 
 
-
 @app.post("/bet", status_code=status.HTTP_201_CREATED, tags=["Bet"])
 async def add_bet(bet: inc.Bet, db: AsyncSession = Depends(get_db)) -> out.Bet:
     """ Подразумевается возможность сделать идентичную ставку повторно. """
     _temp_user_id = 1
     if user := await get_user_by_id(1, db):
-        if bet := await create_bet(user[0], bet, db):
-            return out.Bet.model_validate(bet)
+        # noinspection PyUnresolvedReferences
+        if bet_ := await create_bet(user[0], bet, db):
+            return out.Bet.model_validate(bet_)
         raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail="Payment Failed"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event {bet.event_id} Do Not Exists"
         )
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -50,8 +61,7 @@ async def add_bet(bet: inc.Bet, db: AsyncSession = Depends(get_db)) -> out.Bet:
 async def get_bets(db: AsyncSession = Depends(get_db)) -> out.UserBets:
     _temp_user_id = 1
     if user := await get_user_by_id(1, db):
-        bets = await get_user_bets(user[0], db)
-        return out.UserBets.model_validate(bets)
+        return out.UserBets(bets=await get_user_bets(user[0], db))
     raise HTTPException(status_code=401, detail="Unauthorized")
 
 
@@ -74,7 +84,7 @@ async def get_user(
     db: AsyncSession = Depends(get_db)
 ) -> out.User:
     if user := await get_user_by_id(user_id, db):
-        r_user = out.User.model_validate(user)
+        r_user = out.User.model_validate(user[0])
         return r_user
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,

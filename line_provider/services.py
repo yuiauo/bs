@@ -58,10 +58,11 @@ async def send_events(channel: AbstractChannel, db: EventStorage) -> None:
 
 @lru_cache
 class EventStorage:
+    """ Ввиду спешки решил хранить и обновлять события так """
     __DELAY: int = 5
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, delay: int | float = __DELAY):
+        self.delay = delay
         self.completed_win1 = []
         self.completed_win2 = []
         self.pending = []
@@ -121,7 +122,7 @@ class EventStorage:
     def _update(self) -> None:
         _temp_pending = self.pending[:]
         for e_ind, event in enumerate(self.pending):
-            if event.deadline < time.time() - self.__DELAY:
+            if event.deadline < time.time() - self.delay:
                 _temp_pending.remove(event)
                 self._update_event(event)
         self.pending = _temp_pending

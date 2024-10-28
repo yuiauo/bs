@@ -4,7 +4,8 @@ from pydantic import BaseModel, Field, PositiveInt, PositiveFloat
 
 from . import EventState
 
-class Event(BaseModel):
+
+class Event(BaseModel, from_attributes=True):
     """Event model """
     id: PositiveInt
     # нет смысла ставить, если коэффициент <= 1
@@ -12,3 +13,7 @@ class Event(BaseModel):
     state: EventState
     deadline: PositiveFloat
     description: str | None = None
+
+
+class NewEvents(BaseModel):
+    events: list[Event]

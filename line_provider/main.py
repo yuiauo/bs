@@ -1,18 +1,17 @@
-# from typing import cast
+import time
 
 from aio_pika.abc import AbstractChannel
 from fastapi import Depends, FastAPI, HTTPException, status
 from starlette.responses import RedirectResponse
 
-# from line_provider.lp_typing import EventState
 from schemas import EventCreated
 from lp_typing import EventType
 from schemas import Event, EventList
 from services import EventStorage, get_channel, get_db, send_events
 from settings import APISettings
 
-app = FastAPI(**APISettings().model_dump())
 
+app = FastAPI(**APISettings().model_dump())
 
 
 @app.post("/event", status_code=status.HTTP_201_CREATED, tags=["Event"])
@@ -21,6 +20,11 @@ async def create_event(
         channel: AbstractChannel = Depends(get_channel),
         db: EventStorage = Depends(get_db)
 ) -> EventCreated:
+    if event.deadline > time.time() and event.state != "open":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=""
+        )
     if event in db:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Event already exists"
@@ -55,7 +59,4 @@ async def get_events(
 
 @app.get("/events", tags=["Event"])
 async def get_events(db: EventStorage = Depends(get_db)) -> EventList:
-    return db.all
-
-
-
+    return EventList(events=db.all)
