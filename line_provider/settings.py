@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 
 @lru_cache(maxsize=1)
 class APISettings(BaseSettings):
+    """Настройки сваггера """
     title: str = "lp API"
     description: str = "Test task api N2"
     version: str = "1.0"

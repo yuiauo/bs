@@ -25,6 +25,7 @@ app = FastAPI(**settings.api, lifespan=lifespan)
 
 @app.get("/events", tags=["Event"])
 async def get_events(db: AsyncSession = Depends(get_db)) -> ext.NewEvents:
+    """Возвращает из БД события на которые ещё можно сделать ставку. """
     for e in await get_available_events(db):
         print(e)
     events = [
@@ -33,15 +34,12 @@ async def get_events(db: AsyncSession = Depends(get_db)) -> ext.NewEvents:
     return ext.NewEvents(events=events)
 
 
-@app.get("/event", tags=["Event"])
-async def get_event_by_id() -> ext.Event:
-    ...
-    return ext.Event()
-
-
 @app.post("/bet", status_code=status.HTTP_201_CREATED, tags=["Bet"])
 async def add_bet(bet: inc.Bet, db: AsyncSession = Depends(get_db)) -> out.Bet:
-    """ Подразумевается возможность сделать идентичную ставку повторно. """
+    """ Делает ставку на событие, подразумевается возможность сделать
+     идентичную ставку повторно.
+    """
+    # Да, на текущий момент притягиваем всё к одному пользователю
     _temp_user_id = 1
     if user := await get_user_by_id(1, db):
         # noinspection PyUnresolvedReferences
@@ -49,7 +47,8 @@ async def add_bet(bet: inc.Bet, db: AsyncSession = Depends(get_db)) -> out.Bet:
             return out.Bet.model_validate(bet_)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Event {bet.event_id} Do Not Exists"
+            detail=f"Either Event {bet.event_id} Do Not Exists Or Not Enough "
+                   f"Money"
         )
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -59,6 +58,7 @@ async def add_bet(bet: inc.Bet, db: AsyncSession = Depends(get_db)) -> out.Bet:
 
 @app.get("/bets", tags=["Bet"])
 async def get_bets(db: AsyncSession = Depends(get_db)) -> out.UserBets:
+    """Возвращает все ставки сделанные конкретным юзером. """
     _temp_user_id = 1
     if user := await get_user_by_id(1, db):
         return out.UserBets(bets=await get_user_bets(user[0], db))
@@ -67,7 +67,9 @@ async def get_bets(db: AsyncSession = Depends(get_db)) -> out.UserBets:
 
 @app.post("/user", status_code=status.HTTP_201_CREATED, tags=["User"])
 async def add_user(db: AsyncSession = Depends(get_db)) -> out.User:
-    # пока что для простоты генерируем юзернейм прям тут
+    """ Добавляет пользователя в БД, пока что для простоты генерируем юзернейм
+     прям тут
+    """
     new_username = str(uuid4())
     if user := await create_user(new_username, db):
         r_user = out.User.model_validate(user)
@@ -83,6 +85,7 @@ async def get_user(
     user_id: PositiveInt,
     db: AsyncSession = Depends(get_db)
 ) -> out.User:
+    """Вернуть данные о пользователе через id """
     if user := await get_user_by_id(user_id, db):
         r_user = out.User.model_validate(user[0])
         return r_user

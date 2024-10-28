@@ -52,6 +52,7 @@ async def send_event(event: Event, channel: AbstractChannel) -> None:
 
 
 async def send_events(channel: AbstractChannel, db: EventStorage) -> None:
+    """Закидвает в раббит новые и обновленные события """
     tasks = [send_event(event, channel) for event in db.get_updates()]
     await asyncio.gather(*tasks)
 

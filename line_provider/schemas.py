@@ -9,11 +9,12 @@ from lp_typing import EventState
 
 
 class Event(BaseModel):
-    """ Модель события """
+    """Схема валидации входящего события. Допустимо добавлять события до
+    мая 2033 года (2 млрд таймстамп) """
     id: PositiveInt
     coefficient: Decimal = Field(gt=1)
     state: EventState
-    deadline: PositiveInt = Field(ge=15e8, le=20e8)
+    deadline: PositiveInt = Field(ge=15e8, le=2e9)
     description: str | None = None
 
     def to_bytes(self) -> bytes:
@@ -22,6 +23,7 @@ class Event(BaseModel):
 
     @model_validator(mode="after")
     def check_if_expired(self) -> Self:
+        """Проверяет валидность времени/статуса """
         if self.deadline <= time.time():
             if self.state == "open":
                 raise ValueError("Can't be `open` after deadline")
@@ -30,6 +32,14 @@ class Event(BaseModel):
                 raise ValueError("Can't find winner before deadline")
         return self
 
+
+class UpdateEvent(BaseModel):
+    """Схема валидации события для patch. На текущий момент можно менять
+     только коэффициент и описание """
+    coefficient: Decimal | None = Field(gt=1, default=None)
+    description: str | None = None
+
+# ================ Возвращаемые схемы событий ===============
 
 class EventCreated(BaseModel):
     event_id: PositiveInt = Field(ge=1)

@@ -1,20 +1,23 @@
-from decimal import Decimal
-from typing import Annotated
+"""Схемы используемые в качестве ответа апи"""
 
-from pydantic import BaseModel, Field, PlainSerializer, PositiveInt
+from decimal import Decimal
+
+from pydantic import BaseModel, Field, PositiveInt
 
 
 class OutgoingModel(BaseModel, from_attributes=True):
+    """ Условно абстрактный класс для подгрузки с БД """
     pass
 
 
 class Login(OutgoingModel):
+    """Успешный логин вернёт user_id по которому можно стянуть юзера """
     username: str
-    password: str
     user_id: int
 
 
 class User(OutgoingModel):
+    """ """
     id: PositiveInt
     balance: Decimal = Field(ge=Decimal("0.0"), decimal_places=2)
     name: str

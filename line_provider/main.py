@@ -20,6 +20,7 @@ async def create_event(
         channel: AbstractChannel = Depends(get_channel),
         db: EventStorage = Depends(get_db)
 ) -> EventCreated:
+    """Создания события """
     if event.deadline > time.time() and event.state != "open":
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -34,10 +35,12 @@ async def create_event(
     return EventCreated(event_id=event.id)
 
 
+
 @app.get("/event/{event_id}", tags=["Event"])
 async def get_event(
         event_id: int, db: EventStorage = Depends(get_db)
 ) -> Event:
+    """Возвращает событие под определенным id"""
     if event := await db.get(event_id):
         return event
     raise HTTPException(
@@ -51,6 +54,9 @@ async def get_events(
         event_type: EventType,
         db: EventStorage = Depends(get_db)
 ) -> EventList | RedirectResponse:
+    """Возвращает определенную категорию хранящихся событий.
+    Категории: 'open', 'all', 'win1', 'win2'
+    """
     if event_type == "all":
         return RedirectResponse(url='/events')
     # cast(EventState, event_type)
@@ -59,4 +65,11 @@ async def get_events(
 
 @app.get("/events", tags=["Event"])
 async def get_events(db: EventStorage = Depends(get_db)) -> EventList:
+    """Все хранящиеся события в псевдобазе """
     return EventList(events=db.all)
+
+
+@app.patch("/event/{event_id}")
+async def update_event(event_id: str, event: Event) -> Event:
+    """Обновляет событие"""
+    ...

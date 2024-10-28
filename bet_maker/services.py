@@ -39,7 +39,7 @@ async def process_events(channel: AbstractChannel) -> None:
     async for new_event in new_events(queue):
         async with AsyncSessionLocal() as db:
             if event := await get_event(new_event.id, db):
-                await update_event(event[0], new_event, db)
+                await _update_event(event[0], new_event, db)
             else:
                 await add_event(new_event, db)
 
@@ -106,11 +106,15 @@ async def add_event(event_schema: EventModel, db: AsyncSession) -> Event:
     return event
 
 
-async def update_event(
+async def _update_event(
     event: Event, new_event_schema: EventModel, db: AsyncSession
 ) -> Event:
-    """Согласно ТЗ меняем только статус. """
+    """У обновляемого события может измениться только статус или
+     коэффициент.
+    """
+    event.coefficient = new_event_schema.coefficient
     event.state = new_event_schema.state
+    event.description = new_event_schema.description
     await db.commit()
     await db.refresh(event)
     return event

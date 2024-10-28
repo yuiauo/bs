@@ -44,12 +44,6 @@ services:
       - "5432:5432"
     env_file:
       - bet_maker/.env
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=&{POSTGRES_USER}
-      - POSTGRES_PASSWORD=&{POSTGRES_PASSWORD}
-      - POSTGRES_DB=&{POSTGRES_DB}
 
   rabbit:
     image: rabbitmq:4.0.2-alpine
@@ -57,11 +51,5 @@ services:
     restart: always
     env_file:
       - line_provider/.env
-    environment:
-      - RABBITMQ_DEFAULT_USER=&{RABBITMQ_DEFAULT_USER}
-      - RABBITMQ_DEFAULT_PASS=&{RABBITMQ_DEFAULT_PASS}
     ports:
       - "5672:5672"
-
-volumes:
-  postgres_data:
