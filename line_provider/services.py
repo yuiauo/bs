@@ -81,6 +81,9 @@ class EventStorage:
                 raise ValueError
         self.fifo_changes.put(event)
 
+    async def update(self, event: Event) -> None | NoReturn:
+        self.fifo_changes.put(event)
+
     def __getitem__(self, state: EventState) -> list[Event] | NoReturn:
         match state:
             case "win1":

@@ -1,10 +1,8 @@
-import time
-
 from aio_pika.abc import AbstractChannel
 from fastapi import Depends, FastAPI, HTTPException, status
 from starlette.responses import RedirectResponse
 
-from schemas import EventCreated
+from schemas import EventCreated, UpdateEvent
 from lp_typing import EventType
 from schemas import Event, EventList
 from services import EventStorage, get_channel, get_db, send_events
@@ -21,11 +19,6 @@ async def create_event(
         db: EventStorage = Depends(get_db)
 ) -> EventCreated:
     """Создания события """
-    if event.deadline > time.time() and event.state != "open":
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=""
-        )
     if event in db:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Event already exists"
@@ -69,7 +62,21 @@ async def get_events(db: EventStorage = Depends(get_db)) -> EventList:
     return EventList(events=db.all)
 
 
-@app.patch("/event/{event_id}")
-async def update_event(event_id: str, event: Event) -> Event:
+@app.patch("/event/{event_id}", status_code=status.HTTP_202_ACCEPTED)
+async def update_event(
+    event_id: int,
+    updates: UpdateEvent,
+    channel: AbstractChannel = Depends(get_channel),
+    db: EventStorage = Depends(get_db)
+) -> Event:
     """Обновляет событие"""
-    ...
+    if event := await db.get(event_id):
+        event.coefficient = updates.coefficient
+        event.description = updates.description
+        await db.update(event)
+        await send_events(channel, db)
+        return event
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Event {event_id} Not Found"
+    )
