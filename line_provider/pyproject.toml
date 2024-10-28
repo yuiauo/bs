@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "pythonproject2"
+version = "0.1.0"
+description = ""
+authors = ["Yuri Bakurov <yuri.bakurov@arsis.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aio-pika = "^9.4.3"
+fastapi = {extras = ["standart"], version = "^0.115.4"}
+pydantic-settings = "^2.6.0"
+uvicorn = "^0.32.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
