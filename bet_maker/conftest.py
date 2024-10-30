@@ -1,21 +1,17 @@
 """Тесты для bet_maker. На текущий момент не подтянуты в контейнер,
  а выполняются локально из рута """
-import os
-
-import dotenv
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from bet_maker.main import app as bapp
 from bet_maker.models import Base, Event
 from bet_maker.services import get_db
+from bet_maker.settings import settings
 
 
-dotenv.load_dotenv()
-# по хорошему можно было бы завести отдельный контейнер с тестами
-TEST_DATABASE_URL = os.getenv("PG_DATABASE_URL")
-
-bind = create_async_engine(url=TEST_DATABASE_URL, future=True, echo=True)
+bind = create_async_engine(
+    url=settings.env.PG_DATABASE_URL, future=True, echo=True
+)
 TestingSession = async_sessionmaker(bind=bind)
 
 

@@ -1,0 +1,24 @@
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  line_provider_main:
+    format: '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+
+handlers:
+  stdout:
+    class: logging.StreamHandler
+    formatter: line_provider_main
+    level: WARNING
+    stream: ext://sys.stdout
+  file:
+    class: logging.handlers.RotatingFileHandler
+    formatter: line_provider_main
+    level: DEBUG
+    filename: logs/logs.log
+
+loggers:
+  root:
+    level: INFO
+    handlers:
+      - stdout

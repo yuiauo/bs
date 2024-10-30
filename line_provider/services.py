@@ -1,7 +1,6 @@
 from __future__ import annotations
 import asyncio
 from functools import lru_cache
-import os
 import random
 import time
 from typing import AsyncGenerator, NoReturn
@@ -9,15 +8,10 @@ from queue import Queue
 
 import aio_pika
 from aio_pika.abc import AbstractChannel
-from dotenv import load_dotenv
 
 from lp_typing import EventState
 from schemas import Event
-
-
-load_dotenv()
-RABBITMQ_URL = os.getenv("RABBITMQ_URL")
-EVENT_QUEUE = "events"
+from settings import settings
 
 
 async def get_db() -> AsyncGenerator:
@@ -26,9 +20,9 @@ async def get_db() -> AsyncGenerator:
 
 
 async def get_channel() -> AsyncGenerator[AbstractChannel, None]:
-    connection = await aio_pika.connect(RABBITMQ_URL)
+    connection = await aio_pika.connect(settings.env.RABBITMQ_URL)
     channel = await connection.channel()
-    await channel.declare_queue(EVENT_QUEUE, durable=True)
+    await channel.declare_queue(settings.env.EVENT_QUEUE, durable=True)
     try:
         yield channel
     finally:
@@ -47,7 +41,7 @@ def compose_message(message: Event) -> aio_pika.Message:
 
 async def send_event(event: Event, channel: AbstractChannel) -> None:
     await channel.default_exchange.publish(
-        compose_message(event), routing_key=EVENT_QUEUE
+        compose_message(event), routing_key=settings.env.EVENT_QUEUE
     )
 
 

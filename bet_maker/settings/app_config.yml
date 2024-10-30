@@ -1,0 +1,11 @@
+title: Betmaker API
+description: Basic CRUD operations to interract with bet_maker service
+version: 1.0
+debug: True
+openapi_tags:
+  - name: User
+    description: User CRUD endpoints
+  - name: Bet
+    description: Bet endpoints
+  - name: Event
+    description: Event endpoints

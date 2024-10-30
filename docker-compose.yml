@@ -2,6 +2,7 @@ services:
   line-provider:
     build:
       context: line_provider
+      dockerfile: settings/Dockerfile
     container_name: line-provider
     command: "uvicorn main:app --host 0.0.0.0 --port 8080"
     ports:
@@ -13,22 +14,19 @@ services:
   bet-maker:
     build:
       context: bet_maker
+      dockerfile: settings/Dockerfile
     container_name: bet-maker
     entrypoint: >
       sh -c
         "
-          sleep 10
-          echo Stairway testing
-          alembic upgrade head
-          alembic downgrade -1
           echo Applying alembic migration...
-          alembic upgrade head
+          alembic -c settings/alembic.ini upgrade head
           echo Starting uvicorn server...
           uvicorn main:app --host 0.0.0.0 --port 8081
           done
         "
     env_file:
-      - bet_maker/.env
+      - bet_maker/settings/.env
     ports:
       - "8081:8081"
     depends_on:
@@ -43,13 +41,13 @@ services:
     ports:
       - "5432:5432"
     env_file:
-      - bet_maker/.env
+      - bet_maker/settings/.env
 
   rabbit:
     image: rabbitmq:4.0.2-alpine
     container_name: rabbit
     restart: always
     env_file:
-      - line_provider/.env
+      - line_provider/settings/.env
     ports:
       - "5672:5672"

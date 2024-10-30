@@ -1,5 +1,4 @@
 """Схемы используемые в качестве ответа апи"""
-
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, PositiveInt
@@ -17,7 +16,7 @@ class Login(OutgoingModel):
 
 
 class User(OutgoingModel):
-    """ """
+    """Данные которые возвращаем о юзере """
     id: PositiveInt
     balance: Decimal = Field(ge=Decimal("0.0"), decimal_places=2)
     name: str

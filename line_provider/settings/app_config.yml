@@ -1,0 +1,7 @@
+title: Lineprovider API
+description: Basic CRUD operations to interract with line_provider service
+version: 1.0
+debug: True
+openapi_tags:
+  - name: Event
+    description: Event endpoints

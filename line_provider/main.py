@@ -6,10 +6,10 @@ from schemas import EventCreated, UpdateEvent
 from lp_typing import EventType
 from schemas import Event, EventList
 from services import EventStorage, get_channel, get_db, send_events
-from settings import APISettings
+from settings import settings
 
 
-app = FastAPI(**APISettings().model_dump())
+app = FastAPI(**settings.app)
 
 
 @app.post("/event", status_code=status.HTTP_201_CREATED, tags=["Event"])

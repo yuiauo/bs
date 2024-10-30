@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(**settings.api, lifespan=lifespan)
+app = FastAPI(**settings.app, lifespan=lifespan)
 
 
 @app.get("/events", tags=["Event"])

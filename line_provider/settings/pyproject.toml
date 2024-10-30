@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pythonproject2"
+name = "line_provider"
 version = "0.1.0"
 description = ""
 authors = ["Yuri Bakurov <yuri.bakurov@arsis.ru>"]

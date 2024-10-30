@@ -1,17 +1,39 @@
 from functools import lru_cache
+from pathlib import Path
+from typing import Any
+from yaml import safe_load
+
 from pydantic_settings import BaseSettings
 
 
-@lru_cache(maxsize=1)
-class APISettings(BaseSettings):
-    """Настройки сваггера """
-    title: str = "lp API"
-    description: str = "Test task api N2"
-    version: str = "1.0"
-    debug: bool = True
-    openapi_tags: list[dict] = [
-        {"name": "Event", "description": "Event endpoints"},
-    ]
+PARENT_DIR = Path(__file__).parent
+APP_SETTINGS_PATH = Path(PARENT_DIR, "settings/app_config.yml")
+LOG_SETTINGS_PATH = Path(PARENT_DIR, "settings/logging_config.yml")
+ENV_PATH = Path(PARENT_DIR, "settings/.env")
 
 
-settings = APISettings().model_dump()
+class EnvSettings(BaseSettings, extra="allow", env_file=ENV_PATH):
+    """Прочие настройки """
+    # да, были наполеоновские планы добавить отдельную бд с паролями
+    RABBITMQ_URL: str
+    EVENT_QUEUE: str = "events"
+
+
+@lru_cache
+class AppSettings:
+    """Синглтон для настроек"""
+    def __init__(self):
+        self.app = load_yaml(APP_SETTINGS_PATH)
+        self.logger = load_yaml(LOG_SETTINGS_PATH)
+        self.env = EnvSettings()
+
+
+def load_yaml(path: Path) -> dict[str, Any]:
+    with Path(path).open("r") as f:
+        config = safe_load(f)
+    if not isinstance(config, dict):
+        raise FileNotFoundError("There is no appropriate file")
+    return config
+
+
+settings = AppSettings()

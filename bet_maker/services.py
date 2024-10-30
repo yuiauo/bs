@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import AsyncSessionLocal
+from logger import logger
 from models import Bet, Event, User
 from schemas.external import Event as EventModel
 from schemas.incoming import Bet as BetModel
@@ -15,9 +16,9 @@ from settings import settings
 
 
 async def get_channel() -> AsyncGenerator[AbstractChannel, None]:
-    connection = await aio_pika.connect(settings.extra.RABBITMQ_URL)
+    connection = await aio_pika.connect(settings.env.RABBITMQ_URL)
     channel = await connection.channel()
-    await channel.declare_queue(settings.extra.EVENT_QUEUE, durable=True)
+    await channel.declare_queue(settings.env.EVENT_QUEUE, durable=True)
     try:
         yield channel
     finally:
@@ -25,7 +26,7 @@ async def get_channel() -> AsyncGenerator[AbstractChannel, None]:
 
 
 async def wait_for_events():
-    connection = await aio_pika.connect(settings.extra.RABBITMQ_URL)
+    connection = await aio_pika.connect(settings.env.RABBITMQ_URL)
     channel = await connection.channel()
     await process_events(channel)
     await channel.close()
@@ -34,7 +35,7 @@ async def wait_for_events():
 
 async def process_events(channel: AbstractChannel) -> None:
     queue = await channel.declare_queue(
-        settings.extra.EVENT_QUEUE, durable=True
+        settings.env.EVENT_QUEUE, durable=True
     )
     async for new_event in new_events(queue):
         async with AsyncSessionLocal() as db:

@@ -1,0 +1,27 @@
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  bet_maker_main:
+    format: '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+
+handlers:
+  stdout:
+    class: logging.StreamHandler
+    formatter: bet_maker_main
+    level: WARNING
+    stream: ext://sys.stdout
+  file:
+    class: logging.handlers.RotatingFileHandler
+    formatter: bet_maker_main
+    level: DEBUG
+    filename: logs/logs.log
+    maxBytes: 10000
+    backupCount: 3
+
+loggers:
+  bet_maker:
+    level: INFO
+    handlers:
+      - stdout
+      - file
