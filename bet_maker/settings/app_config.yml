@@ -1,6 +1,6 @@
 title: Betmaker API
 description: Basic CRUD operations to interract with bet_maker service
-version: 1.0
+version: '1.0'
 debug: True
 openapi_tags:
   - name: User

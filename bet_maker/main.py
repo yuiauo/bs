@@ -24,7 +24,6 @@ app = FastAPI(**settings.app, lifespan=lifespan)
 
 
 @app.get("/events", tags=["Event"])
-@handle_exception
 async def get_events(db: AsyncSession = Depends(get_db)) -> ext.NewEvents:
     """Возвращает из БД события на которые ещё можно сделать ставку. """
     events = [

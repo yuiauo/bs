@@ -16,6 +16,8 @@ handlers:
     formatter: line_provider_main
     level: DEBUG
     filename: logs/logs.log
+    maxBytes: 100000
+    backupCount: 3
 
 loggers:
   root:
