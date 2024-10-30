@@ -22,3 +22,4 @@ loggers:
     level: INFO
     handlers:
       - stdout
+      - file

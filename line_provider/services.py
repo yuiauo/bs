@@ -10,6 +10,7 @@ import aio_pika
 from aio_pika.abc import AbstractChannel
 
 from lp_typing import EventState
+from logger import logger
 from schemas import Event
 from settings import settings
 
@@ -40,6 +41,7 @@ def compose_message(message: Event) -> aio_pika.Message:
 
 
 async def send_event(event: Event, channel: AbstractChannel) -> None:
+    logger.info(f"Sending event {event.model_dump()}")
     await channel.default_exchange.publish(
         compose_message(event), routing_key=settings.env.EVENT_QUEUE
     )
@@ -66,10 +68,13 @@ class EventStorage:
     async def add(self, event: Event) -> None | NoReturn:
         match event.state:
             case "win1":
+                logger.info(f"Created completed (win1) event with {event.id=}")
                 self.completed_win1.append(event)
             case "win2":
+                logger.info(f"Created completed (win2) event with {event.id=}")
                 self.completed_win2.append(event)
             case "open":
+                logger.info(f"Created available (open) event with {event.id=}")
                 self.pending.append(event)
             case _:
                 raise ValueError
@@ -128,6 +133,7 @@ class EventStorage:
     def get_updates(self):
         self._update()
         while not self.fifo_changes.empty():
+            logger.info(f"Sending new event")
             yield self.fifo_changes.get()
         else:
             self.fifo_changes.task_done()
